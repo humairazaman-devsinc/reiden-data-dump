@@ -1,0 +1,20 @@
+# Database Configuration
+DATABASE_URL=postgresql://reidin_user:prypco123@localhost:5432/reidin_data
+
+# API Configuration
+API_BASE_URL=https://api.reidin.com/api/v2/
+API_TOKEN=
+
+# Environment Configuration
+ENV=development
+DEBUG=True
+
+# Logging
+LOG_LEVEL=INFO
+
+# Docker Database Settings
+DB_HOST=reidin_postgres
+DB_PORT=5432
+DB_NAME=reidin_data
+DB_USER=reidin_user
+DB_PASSWORD=prypco123
