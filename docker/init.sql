@@ -87,9 +87,19 @@ CREATE TABLE IF NOT EXISTS property (
     id BIGINT PRIMARY KEY,
     name VARCHAR(255),
     name_local VARCHAR(255),
+    description TEXT,
+    description_local TEXT,
     internal_status_id BIGINT,
+    loc_point JSONB,
+    geo_point JSONB,
+    loc_polygon JSONB,
+
+    level JSONB,
+    status JSONB,
+    types JSONB,
     main_type_name VARCHAR(255),
     main_subtype_name VARCHAR(255),
+
     parent_id BIGINT,
     parent_ids INTEGER[],
     parents JSONB,
@@ -98,35 +108,22 @@ CREATE TABLE IF NOT EXISTS property (
     location JSONB,
     locations JSONB,
 
-    status JSONB,
-    level JSONB,
-
-    description TEXT,
-    description_local TEXT,
-    types JSONB,
-    parties JSONB,
-    primary_image TEXT,
-    images JSONB,
+    attributes JSONB,
     units JSONB,
     developer_prices JSONB,
+    images JSONB,
+    primary_image TEXT,
+    parties JSONB,
+
     search_terms VARCHAR(255)[],
-    loc_point JSONB,
-    geo_point JSONB,
-    loc_polygon JSONB,
     created_on TIMESTAMP,
     updated_on TIMESTAMP,
     import_date TIMESTAMP,
     import_type VARCHAR(50),
-    -- Double check following fields:
+
     dld_status VARCHAR(255),
-    attributes JSONB,
     elapsed_time_status INTEGER,
-    gla INTEGER,
-    office_gla INTEGER,
-    typical_gla_floor INTEGER,
-    built_up_area DECIMAL(15, 2),
-    building_height INTEGER,
-    land_area DECIMAL(15, 2),
+
     raw_data JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -143,7 +140,7 @@ CREATE TABLE IF NOT EXISTS property_details (
     developer_prices JSONB,
     parties JSONB,
     images JSONB,
-    units JSONB,
+    units JSONB,                    -- Get from here
     attributes JSONB,
     level JSONB,
     geo_point JSONB,
@@ -160,12 +157,12 @@ CREATE TABLE IF NOT EXISTS property_details (
     elapsed_time_status INTEGER,
     dld_status VARCHAR(255),
     updated_on TIMESTAMP,
-    gla INTEGER,
-    office_gla INTEGER,
-    typical_gla_floor INTEGER,
-    built_up_area DECIMAL(15, 2),
-    building_height INTEGER,
-    land_area DECIMAL(15, 2),
+    gla INTEGER,                    -- Get from here
+    office_gla INTEGER,             -- Get from here
+    typical_gla_floor INTEGER,      -- Get from here
+    built_up_area DECIMAL(15, 2),   -- Get from here
+    building_height INTEGER,        -- Get from here
+    land_area DECIMAL(15, 2),       -- Get from here
     raw_data JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
