@@ -1,3 +1,10 @@
+DROP TABLE IF EXISTS location CASCADE;
+DROP TABLE IF EXISTS company CASCADE;
+DROP TABLE IF EXISTS property CASCADE;
+DROP TABLE IF EXISTS property_details CASCADE;
+DROP TABLE IF EXISTS indicator_aliased CASCADE;
+DROP TABLE IF EXISTS indicator_area_aliased CASCADE;
+
 -- Table for location from locations endpoint
 CREATE TABLE IF NOT EXISTS location (
     location_id BIGINT PRIMARY KEY,
@@ -146,6 +153,7 @@ CREATE TABLE IF NOT EXISTS property_details (
     geo_point JSONB,
     loc_point JSONB,
     location_id BIGINT,
+    location JSONB,
     locations JSONB,
     parent_id BIGINT,
     parent_ids INTEGER[],
@@ -183,35 +191,35 @@ CREATE TABLE IF NOT EXISTS property_details (
 -- );
 
 
--- Table for indicator groups from indicators/groups endpoint
-CREATE TABLE IF NOT EXISTS indicator_group (
-    id BIGINT PRIMARY KEY,
-    name VARCHAR(255),
-    name_local VARCHAR(255),
-    parent_id BIGINT,
-    indicator_id BIGINT NOT NULL, -- FK to indicator tables
-    indicator_table_name VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- -- Table for indicator groups from indicators/groups endpoint
+-- CREATE TABLE IF NOT EXISTS indicator_group (
+--     id BIGINT PRIMARY KEY,
+--     name VARCHAR(255),
+--     name_local VARCHAR(255),
+--     parent_id BIGINT,
+--     indicator_id BIGINT NOT NULL, -- FK to indicator tables
+--     indicator_table_name VARCHAR(255),
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
 
 -- Table for property-level indicators (indicators/aliased)
 CREATE TABLE IF NOT EXISTS indicator_aliased (
     series_id BIGINT PRIMARY KEY,
     series_name VARCHAR(255),
     series_name_local VARCHAR(255),
-    location_id BIGINT,
-    location JSONB,
     currency JSONB,
     data_frequency JSONB,
     update_frequency JSONB,
     unit JSONB,
 
+    location_id BIGINT,
+    location JSONB,
+
     property_id BIGINT,
     property JSONB,
 
-    indicator_id BIGINT,
     indicator JSONB,
-    indicator_name TEXT,
+    indicator_groups JSONB,
     last_value JSONB,
     timepoints JSONB,
     property_is_null BOOLEAN,
@@ -222,7 +230,7 @@ CREATE TABLE IF NOT EXISTS indicator_aliased (
 -- Table for area-level indicators (indicators/area-aliased)
 CREATE TABLE IF NOT EXISTS indicator_area_aliased (
     -- Filter Details
-    series_id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    series_id BIGINT PRIMARY KEY,
     series_name VARCHAR(255),
     series_name_local VARCHAR(255),
     alias VARCHAR(255),
@@ -237,9 +245,14 @@ CREATE TABLE IF NOT EXISTS indicator_area_aliased (
     indicator_property_type VARCHAR(255),
     indicator_property_subtype VARCHAR(255),
     property_is_null BOOLEAN,
-    property JSONB,
     unit JSONB,
+
+    property_id BIGINT,
+    property JSONB,
+    location_id BIGINT,
     location JSONB,
+
+    indicator_groups JSONB,
     currency JSONB,
     timepoints JSONB,
     raw_data JSONB,

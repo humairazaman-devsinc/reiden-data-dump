@@ -12,6 +12,12 @@ DEBUG=True
 # Logging
 LOG_LEVEL=INFO
 
+# Request Settings
+REQUEST_TIMEOUT=30
+REQUEST_RETRIES=3
+BATCH_SIZE=1000
+INDICATORS_BATCH_SIZE=10
+
 # Docker Database Settings
 DB_HOST=reidin_postgres
 DB_PORT=5432
