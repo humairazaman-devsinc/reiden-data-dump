@@ -1,0 +1,488 @@
+// ================================================
+// REIDIN DATABASE SCHEMA - CORRECTED VERSION
+// ================================================
+// This schema reflects the essential database structure
+// Use this in dbdiagram.io to visualize the structure
+
+// ================================================
+// CORE REFERENCE TABLES
+// ================================================
+
+Table location {
+  location_id bigint [pk, not null]
+  city_id bigint
+  city_name varchar(255)
+  country_code varchar(10)
+  county_id bigint
+  county_name varchar(255)
+  description text
+  district_id bigint
+  district_name varchar(255)
+  location_name varchar(255)
+  geo_point jsonb
+  photo_path text
+  raw_data jsonb
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Master location table with 1000+ Dubai locations'
+}
+
+Table property {
+  id bigint [pk, not null]
+  name varchar(255)
+  name_local varchar(255)
+  description text
+  description_local text
+  internal_status_id bigint
+  loc_point jsonb
+  geo_point jsonb
+  loc_polygon jsonb
+  level jsonb
+  status jsonb
+  types jsonb
+  main_type_name varchar(255)
+  main_subtype_name varchar(255)
+  parent_id bigint
+  parent_ids array
+  parents jsonb
+  location_id bigint [ref: > location.location_id]
+  location jsonb
+  locations jsonb
+  attributes jsonb
+  units jsonb
+  developer_prices jsonb
+  images jsonb
+  primary_image text
+  parties jsonb
+  search_terms array
+  created_on timestamp
+  updated_on timestamp
+  import_date timestamp
+  import_type varchar(50)
+  dld_status varchar(255)
+  elapsed_time_status integer
+  raw_data jsonb
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Property master data with location relationships'
+}
+
+Table property_details {
+  id bigint [pk, not null]
+  property_id bigint [ref: > property.id, unique]
+  name varchar(255)
+  name_local varchar(255)
+  description text
+  description_local text
+  developer_prices jsonb
+  parties jsonb
+  images jsonb
+  units jsonb
+  attributes jsonb
+  level jsonb
+  geo_point jsonb
+  loc_point jsonb
+  location_id bigint [ref: > location.location_id]
+  location jsonb
+  locations jsonb
+  parent_id bigint
+  parent_ids array
+  parents jsonb
+  primary_image text
+  search_terms array
+  status jsonb
+  types jsonb
+  elapsed_time_status integer
+  dld_status varchar(255)
+  updated_on timestamp
+  gla decimal(15,2)
+  office_gla decimal(15,2)
+  typical_gla_floor decimal(15,2)
+  built_up_area decimal(15,2)
+  building_height decimal(15,2)
+  land_area decimal(15,2)
+  raw_data jsonb
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Detailed property information with measurements'
+}
+
+// ================================================
+// INDICATOR TABLES
+// ================================================
+
+Table indicator_aliased {
+  series_id bigint [pk, not null]
+  series_name varchar(255)
+  series_name_local varchar(255)
+  currency jsonb
+  data_frequency jsonb
+  update_frequency jsonb
+  unit jsonb
+  location_id bigint [ref: > location.location_id]
+  location jsonb
+  property_id bigint [ref: > property.id]
+  property jsonb
+  indicator jsonb
+  indicator_groups jsonb
+  last_value jsonb
+  timepoints jsonb
+  property_is_null boolean
+  raw_data jsonb
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Property-level indicator data from indicators/aliased endpoint'
+}
+
+Table indicator_location {
+  id bigint [pk, not null]
+  location_id bigint [ref: > location.location_id]
+  series_id bigint
+  series_name varchar(255)
+  series_name_local varchar(255)
+  currency varchar(10)
+  data_frequency varchar(50)
+  update_frequency varchar(50)
+  unit varchar(50)
+  location jsonb
+  indicator jsonb
+  indicator_groups jsonb
+  last_value decimal(15,2)
+  timepoints jsonb
+  property_is_null boolean
+  raw_data jsonb
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  indexes {
+    (location_id, series_id, currency, data_frequency, update_frequency, unit) [unique, name: 'unique_indicator_location']
+  }
+  
+  Note: 'Location-level indicator data'
+}
+
+// ================================================
+// TRANSACTION TABLES
+// ================================================
+
+Table transaction_sales {
+  id bigint [pk, not null]
+  start_date date //delete
+  end_date date //delete
+  date date
+  transaction_version varchar(50)
+  transaction_type varchar(100)
+  location_id bigint [ref: > location.location_id]
+  loc_city_id bigint
+  loc_city_name varchar(255)
+  loc_county_id bigint
+  loc_county_name varchar(255)
+  loc_district_id bigint
+  loc_district_name varchar(255)
+  loc_location_id bigint
+  loc_location_name varchar(255)
+  loc_municipal_area varchar(255)
+  property_id bigint [ref: > property.id]
+  property_name varchar(500)
+  property_type_name varchar(100)
+  property_subtype_name varchar(100)
+  price decimal(15,2)
+  price_per_size decimal(15,2)
+  size decimal(15,2)
+  size_land_imp decimal(15,2)
+  attr_unit varchar(50)
+  attr_floor varchar(50)
+  attr_parking varchar(100)
+  attr_land_number varchar(50)
+  // TODO: attr_developer
+  attr_no_of_rooms integer
+  attr_balcony_area decimal(15,2)
+  attr_building_name varchar(500)
+  attr_building_number varchar(50)
+  currency varchar(10)
+  measurement varchar(10)
+  bedroom integer
+  size_range varchar(50) //delete
+  price_range varchar(50) //delete
+  transaction_date varchar(100)
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  raw_data jsonb
+  
+  indexes {
+    (location_id, start_date, end_date, price, transaction_type, date) [unique, name: 'unique_transaction_sales']
+  }
+  
+  Note: 'Sales transaction data with comprehensive coverage'
+}
+
+Table transaction_list {
+  id bigint [pk, not null]
+  transaction_id varchar(255) [not null]
+  date_transaction varchar(50)
+  price decimal(15,2)
+  price_per_size decimal(15,2)
+  size decimal(15,2)
+  size_land decimal(15,2)
+  location_id bigint [ref: > location.location_id, not null]
+  loc_city_id bigint
+  loc_city_name varchar(255)
+  loc_county_id bigint
+  loc_county_name varchar(255)
+  loc_district_id bigint
+  loc_district_name varchar(255)
+  loc_location_id bigint
+  loc_location_name varchar(255)
+  loc_municipal_area varchar(255)
+  property_id bigint [ref: > property.id]
+  property_name varchar(500)
+  property_type_name varchar(100)
+  property_subtype_name varchar(100)
+  municipal_property_type varchar(100)
+  attr_unit varchar(50)
+  attr_floor varchar(50)
+  attr_parking varchar(100)
+  attr_land_number varchar(50)
+  attr_no_of_rooms integer
+  attr_balcony_area decimal(15,2)
+  attr_building_name varchar(500)
+  attr_building_number varchar(50)
+  query_property_type varchar(50) [not null]
+  query_activity_type varchar(50) [not null]
+  query_currency varchar(10) [not null]
+  query_measurement varchar(10) [not null]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  raw_data jsonb
+  
+  indexes {
+    (location_id, query_property_type, query_activity_type, query_currency, query_measurement, transaction_id) [unique, name: 'unique_transaction_list']
+  }
+  
+  Note: 'Transaction list data with query parameters'
+}
+
+Table transaction_raw_rent {
+  id bigint [pk, not null]
+  date date
+  size decimal(15,2)
+  price decimal(15,2)
+  end_date date
+  start_date date
+  size_land_int decimal(15,2)
+  price_per_size decimal(15,2)
+  transaction_type varchar(100)
+  transaction_version varchar(50)
+  loc_city_id bigint
+  loc_city_name varchar(255)
+  loc_county_id bigint
+  loc_county_name varchar(255)
+  loc_district_id bigint
+  loc_location_id bigint [ref: > location.location_id]
+  loc_district_name varchar(255)
+  loc_location_name varchar(255)
+  loc_municipal_area varchar(255)
+  prop_property_id bigint [ref: > property.id]
+  prop_property_name varchar(500)
+  attr_unit varchar(50)
+  attr_floor varchar(50)
+  attr_parking varchar(100)
+  attr_land_number varchar(50)
+  attr_no_of_rooms integer
+  attr_balcony_area decimal(15,2)
+  attr_building_name varchar(500)
+  attr_building_number varchar(50)
+  prop_type_name varchar(100)
+  prop_subtype_name varchar(100)
+  currency varchar(10)
+  measurement varchar(10)
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  raw_data jsonb
+  
+  indexes {
+    (loc_location_id, currency, measurement, date, price, size) [unique, name: 'unique_transaction_raw_rent']
+  }
+  
+  Note: 'Raw rental transaction data with flattened structure'
+}
+
+Table transactions_avg {
+  id bigint [pk, not null]
+  location_id bigint [ref: > location.location_id, not null]
+  location_name varchar(255)
+  property_type varchar(255) [not null]
+  activity_type varchar(255) [not null]
+  currency varchar(10) [not null]
+  measurement varchar(10) [not null]
+  no_of_bedrooms integer
+  date_period varchar(10) [not null]
+  year integer [not null]
+  month integer [not null]
+  average_net_price decimal(15,2)
+  average_unit_price decimal(15,2)
+  total_count integer
+  total_price decimal(15,2)
+  price_per_sqm decimal(15,2)
+  transaction_volume decimal(15,2)
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  raw_data jsonb
+  
+  indexes {
+    (location_id, property_type, activity_type, currency, measurement, no_of_bedrooms, date_period) [unique, name: 'unique_transactions_avg']
+  }
+  
+  Note: 'Time-series average transaction data'
+}
+
+Table transactions_price {
+  id bigint [pk, not null]
+  location_id bigint [ref: > location.location_id, not null]
+  property_type varchar(100) [not null]
+  activity_type varchar(100) [not null]
+  property_id bigint [ref: > property.id]
+  property_sub_type varchar(200)
+  no_of_bedrooms integer
+  term varchar(255)
+  value decimal(15,2)
+  additional_data jsonb
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  raw_data jsonb
+  
+  indexes {
+    (location_id, property_type, activity_type, property_id, property_sub_type, no_of_bedrooms, term) [unique, name: 'unique_transactions_price']
+  }
+  
+  Note: 'Price data for different property types and terms'
+}
+
+// ================================================
+// CMA (COMPARATIVE MARKET ANALYSIS) TABLES
+// ================================================
+
+Table cma_sales {
+  id bigint [pk, not null]
+  property_id bigint [ref: > property.id, not null]
+  alias varchar(50) [not null]
+  currency varchar(10) [not null]
+  measurement varchar(10) [not null]
+  property_type varchar(100) [not null]
+  property_subtype varchar(200) [not null]
+  comparable_property_id bigint [not null]
+  comparable_property_name varchar(500)
+  size decimal(15,2)
+  price decimal(15,2)
+  price_per_size decimal(15,2)
+  transaction_date timestamp
+  city_id integer
+  city_name varchar(255)
+  county_id integer
+  county_name varchar(255)
+  district_id integer
+  district_name varchar(255)
+  location_id integer
+  location_name varchar(255)
+  municipal_area varchar(255)
+  activity_type varchar(100)
+  no_of_bedrooms integer
+  number_of_unit varchar(50)
+  property_nature varchar(100)
+  number_of_floors varchar(50)
+  parent_property jsonb
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  raw_data jsonb
+  
+  indexes {
+    (property_id, alias, currency, measurement, property_type, property_subtype, comparable_property_id) [unique, name: 'unique_cma_sales']
+  }
+  
+  Note: 'CMA sales data with comparable properties'
+}
+
+Table cma2_rents {
+  id bigint [pk, not null]
+  property_id bigint [ref: > property.id]
+  country_code varchar(5) [not null]
+  alias varchar(20) [not null]
+  currency varchar(5) [not null]
+  measurement varchar(10) [not null]
+  property_type varchar(50) [not null]
+  property_subtype varchar(100) [not null]
+  city_id integer
+  city_name varchar(255)
+  county_id integer
+  county_name varchar(255)
+  district_id integer
+  location_id bigint [ref: > location.location_id]
+  district_name varchar(255)
+  location_name varchar(255)
+  municipal_area varchar(255)
+  transaction_count integer
+  average_rent decimal(15,2)
+  median_rent decimal(15,2)
+  min_rent decimal(15,2)
+  max_rent decimal(15,2)
+  rent_per_sqm decimal(15,2)
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  raw_data jsonb
+  
+  indexes {
+    (property_id, country_code, alias, currency, measurement, property_type, property_subtype, city_id, county_id, district_id, location_id) [unique, name: 'unique_cma2_rents']
+  }
+  
+  Note: 'CMA2 rents data with statistical analysis'
+}
+
+// ================================================
+// POI (POINTS OF INTEREST) TABLES
+// ================================================
+
+Table poi_cma {
+  id bigint [pk, not null]
+  property_id bigint [ref: > property.id, not null]
+  measurement varchar(10) [not null]
+  lang varchar(10)
+  poi_subtype_name varchar(100)
+  poi_type_name varchar(100)
+  poi_name varchar(255) [not null]
+  poi_review text
+  poi_rating decimal(3,2)
+  poi_distance decimal(10,2)
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  raw_data jsonb
+  
+  indexes {
+    (property_id, measurement, lang, poi_name, poi_type_name, poi_subtype_name, lat, lon) [unique, name: 'unique_poi_cma']
+  }
+  
+  Note: 'Points of Interest CMA data with location coordinates'
+}
+
+// ================================================
+// RELATIONSHIPS SUMMARY
+// ================================================
+
+// Location is the central hub
+// - 1 location can have many properties
+// - 1 location can have many transaction records
+// - 1 location can have many indicator records
+// - 1 location can have many CMA records
+
+// Property relationships (CRITICAL CONNECTIONS)
+// - 1 property belongs to 1 location
+// - 1 property can have 1 property_details record
+// - 1 property can have many transaction records
+// - 1 property can have many CMA records
+// - 1 property can have many POI records
+
+// KEY DATA FLOW RELATIONSHIPS:
+// - cma_sales.property_id -> property.id (CMA sales data for each property)
+// - cma2_rents.property_id -> property.id (CMA2 rental analysis for each property)
+// - transaction_raw_rent.prop_property_id -> property.id (Raw rental transactions for each property)
+// - poi_cma.property_id -> property.id (Points of Interest data for each property)
+// - All these tables are populated by iterating through all property IDs

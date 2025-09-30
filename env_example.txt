@@ -5,6 +5,11 @@ DATABASE_URL=postgresql://reidin_user:prypco123@localhost:5432/reidin_data
 API_BASE_URL=https://api.reidin.com/api/v2/
 API_TOKEN=
 
+# SQLAlchemy Configuration
+SQLALCHEMY_ECHO=False
+SQLALCHEMY_POOL_SIZE=5
+SQLALCHEMY_MAX_OVERFLOW=10
+
 # Environment Configuration
 ENV=development
 DEBUG=True
@@ -12,15 +17,8 @@ DEBUG=True
 # Logging
 LOG_LEVEL=INFO
 
-# Request Settings
-REQUEST_TIMEOUT=30
-REQUEST_RETRIES=3
-BATCH_SIZE=1000
-INDICATORS_BATCH_SIZE=10
-
-# Docker Database Settings
-DB_HOST=reidin_postgres
+DB_HOST=prypco-reiden-data.postgres.database.azure.com
 DB_PORT=5432
-DB_NAME=reidin_data
-DB_USER=reidin_user
-DB_PASSWORD=prypco123
+DB_NAME=reiden-data
+DB_USER=reidenuser
+DB_PASSWORD=

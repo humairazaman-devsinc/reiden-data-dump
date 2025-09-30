@@ -20,12 +20,25 @@ class Config:
     PROPERTY_LOCATION_ENDPOINT = 'property/location/{location_id}'
     PROPERTY_DETAILS_ENDPOINT = 'property/{property_id}'
     INDICATORS_ALIASES_ENDPOINT = '{country_code}/indicators/aliased/'
-    INDICATORS_AREA_ALIASES_ENDPOINT = '{country_code}/indicators/area-aliased/'
+    
+    # Transaction API Endpoints
+    CMA_SALES_ENDPOINT = '{country_code}/transactions/cma2-sales/'
+    TRANSACTIONS_PRICE_ENDPOINT = '{country_code}/transactions/price/'
+    TRANSACTION_RAW_SALES_ENDPOINT = '{country_code}/transactions/transaction_raw_sales/'
+    TRANSACTION_RAW_RENTS_ENDPOINT = '{country_code}/transactions/transaction_raw_rents/'
+    TRANSACTION_HISTORY_ENDPOINT = '{country_code}/transactions/history/'
+    TRANSACTIONS_AVG_ENDPOINT = '{country_code}/transactions/avg/'
+    TRANSACTIONS_LIST_ENDPOINT = '{country_code}/transactions/list/'
+    
+    # POI API Endpoints
+    POI_CMA_ENDPOINT = 'poi/poi_cma'
+    CMA2_RENTS_ENDPOINT = '{country_code}/transactions/cma2-rents/'
 
     # Request settings
     TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", 30))
     RETRIES = int(os.getenv("REQUEST_RETRIES", 3))
     BATCH_SIZE = int(os.getenv("BATCH_SIZE", 1000))
+    DATABASE_BATCH_SIZE = int(os.getenv("DATABASE_BATCH_SIZE", 5000))
     INDICATORS_BATCH_SIZE = int(os.getenv("INDICATORS_BATCH_SIZE", 10))
     
     DEFAULT_PARAMS = {
