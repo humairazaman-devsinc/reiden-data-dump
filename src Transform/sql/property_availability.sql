@@ -11,7 +11,7 @@ WITH property_units AS (
 sold_units AS (
     SELECT property_id, COUNT(*) AS sold_units
     FROM transaction_sales
-    WHERE transaction_type IN ('Sales - Off-Plan', 'Sales - Ready')
+    WHERE transaction_type IN ('Sales - Off-Plan')
     GROUP BY property_id
 ),
 rented_units AS (
