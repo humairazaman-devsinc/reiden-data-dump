@@ -1,0 +1,29 @@
+INSERT INTO public.cleaned_location (
+    location_id,
+    location_name,
+    city_id,
+    county_id,
+    district_id,
+    country_code,
+    description,
+    geo_point,
+    photo_path,
+    created_at,
+    updated_at
+)
+SELECT
+    location_id,
+    location_name,
+    city_id,
+    county_id,
+    district_id,
+    country_code,
+    description,
+    POINT(
+        (geo_point->>'lat')::float,
+        (geo_point->>'lon')::float
+    ),
+    photo_path,
+    created_at,
+    CURRENT_TIMESTAMP
+FROM public.location;

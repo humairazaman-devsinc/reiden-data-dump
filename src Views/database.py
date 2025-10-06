@@ -104,8 +104,7 @@ class DatabaseManager:
             conn = self.get_connection()
             with conn.cursor() as cur:
                 cur.execute(query, params)
-                columns = [desc[0] for desc in cur.description]
-                return [dict(zip(columns, row)) for row in cur.fetchall()]
+                return cur.fetchall()
         except Exception as e:
             if conn:
                 conn.rollback()
