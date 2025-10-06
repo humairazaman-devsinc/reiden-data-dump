@@ -56,6 +56,7 @@ class PropertyTransformer:
         dev_prices = []
         units = []
         attributes = []
+        images = []
 
         for row in results:
             # property
@@ -126,6 +127,19 @@ class PropertyTransformer:
                         "value_bool": attr.get("value_bool"),
                         "value_text": attr.get("value_text"),
                         "value_date": attr.get("value_date"),
+                    }
+                )
+
+            # images
+            for img in row["images"] or []:
+                images.append(
+                    {
+                        "property_id": row.get["property_id"],
+                        "unit_id": img.get("unit_id"),
+                        "order": img.get("order"),
+                        "is_primary": img.get("is_primary"),
+                        "path": img.get("path"),
+                        "type_name": img.get("type").get("name"),
                     }
                 )
 

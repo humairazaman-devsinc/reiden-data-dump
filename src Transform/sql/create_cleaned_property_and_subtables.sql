@@ -58,3 +58,14 @@ CREATE TABLE property_attributes (
     value_text TEXT,
     value_date DATE
 );
+
+-- Images table
+CREATE TABLE images (
+    id BIGSERIAL PRIMARY KEY,
+    property_id BIGINT REFERENCES cleaned_property(property_id),
+    unit_id VARCHAR(255),
+    order INT,
+    is_primary BOOLEAN,
+    path TEXT,
+    type_name VARCHAR(255),
+);
