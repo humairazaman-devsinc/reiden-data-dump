@@ -1,10 +1,9 @@
 -- Add columns and populate with computed availability data
 WITH property_units AS (
     SELECT
-        p.id as property_id,
-        SUM((unit->>'number_of_unit')::int) AS total_units
+        p.id AS property_id,
+        (p.units->0->>'number_of_unit')::int AS total_units
     FROM property p
-    CROSS JOIN LATERAL jsonb_array_elements(p.units) AS unit
     WHERE units IS NOT NULL
     GROUP BY p.id
 ),
