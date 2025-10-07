@@ -1,4 +1,4 @@
-from database import DatabaseManager
+from utils.database import DatabaseManager
 
 
 class LocationTransformer:
@@ -7,7 +7,6 @@ class LocationTransformer:
         self.batch_size = batch_size
 
     def transform_location_data(self) -> int:
-        print('transform')
         update_query = """
         INSERT INTO public.cleaned_location (
             location_id,

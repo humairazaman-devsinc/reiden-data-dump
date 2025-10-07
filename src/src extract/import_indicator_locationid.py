@@ -13,9 +13,9 @@ PARENT_DIR = Path(__file__).resolve().parents[1]
 if str(PARENT_DIR) not in sys.path:
     sys.path.append(str(PARENT_DIR))
 
-from api_client import ReidinAPIClient
-from database import DatabaseManager
-from processors import DataProcessor
+from utils.api_client import ReidinAPIClient
+from utils.database import DatabaseManager
+from utils.processors import DataProcessor
 
 # Configure logging
 logging.basicConfig(

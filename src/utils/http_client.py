@@ -1,6 +1,6 @@
 import requests
 from requests.adapters import HTTPAdapter, Retry
-from config import Config
+from .config import Config
 
 def get_http_session() -> requests.Session:
     session = requests.Session()

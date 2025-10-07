@@ -7,7 +7,7 @@ import time
 from psycopg2.extras import execute_values
 from psycopg2 import pool
 from typing import List, Dict, Any, Optional, Set
-from config import Config
+from .config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class DatabaseManager:
                         logger.error(f"❌ Failed to create connection pool: {e}")
                         raise
         return self._pool
-    
+
     def get_connection(self):
         """Get connection from pool with timeout and retry logic"""
         max_retries = 3
@@ -71,7 +71,7 @@ class DatabaseManager:
                         application_name='cma_sales_importer',
                         options='-c statement_timeout=30000'
                     )
-    
+
     def return_connection(self, conn):
         """Return connection to pool with proper error handling"""
         try:
@@ -102,6 +102,24 @@ class DatabaseManager:
             if conn:
                 conn.rollback()
             logger.error("Query failed: %s", e)
+            raise
+        finally:
+            if conn:
+                self.return_connection(conn)
+
+    def transform_data(self, update_query: str, params: Optional[List[Any]] = None) -> None:
+        """Transform data in the database using a provided update query."""
+        conn = None
+        try:
+            conn = self.get_connection()
+            with conn.cursor() as cur:
+                cur.execute(update_query, params)
+                conn.commit()
+                logger.info("Data transformation completed successfully.")
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            logger.error("Data transformation failed: %s", e)
             raise
         finally:
             if conn:
@@ -145,7 +163,6 @@ class DatabaseManager:
             raw_data = EXCLUDED.raw_data
         """
         self.bulk_insert(query, data_list)
-
 
     def insert_property_data(self, data_list: List[Dict[str, Any]]) -> None:
         """Insert property data from property/location/{location_id} endpoint"""

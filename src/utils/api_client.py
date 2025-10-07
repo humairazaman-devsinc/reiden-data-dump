@@ -2,7 +2,7 @@ import logging
 import time
 from typing import Dict, Any, List, Optional
 from utils.http_client import get_http_session
-from config import Config
+from .config import Config
 
 logger = logging.getLogger(__name__)
 
