@@ -56,12 +56,6 @@ class TransactionListImporter:
         self.api_client = ReidinAPIClient()
         self.processor = DataProcessor()
         
-        # Create the transaction_list table if it doesn't exist
-        try:
-            self.db.create_transaction_list_table()
-        except Exception as e:
-            logger.warning(f"Could not create transaction_list table: {e}")
-        
         # Default parameters based on the user's example
         self.property_types = ["residential", "office"]
         self.activity_types = ["ready", "off-plan", "mortgage", "off-plan-mortgage"]
