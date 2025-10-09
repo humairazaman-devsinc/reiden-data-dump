@@ -249,6 +249,70 @@ class DataProcessor:
 
         return processed
 
+    def process_indicator_location_id_response(
+        self,
+        response_data: Dict[str, Any],
+        location_id: int,
+        currency: str,
+        measurement: str,
+        page_number: int,
+    ) -> List[Dict[str, Any]]:
+        """Process indicator location ID data from indicators/location_id endpoint"""
+        processed = []
+        
+        if not response_data or 'data' not in response_data:
+            logger.warning("No data found in indicator location ID response")
+            return processed
+            
+        data_items = response_data['data']
+        logger.info("Processing %d indicator location ID records for location %d", len(data_items), location_id)
+        
+        for item in data_items:
+            try:
+                # Extract last_value data
+                last_value = item.get("last_value", {})
+                indicator_value = last_value.get("value") if isinstance(last_value, dict) else None
+                indicator_value_date = last_value.get("date") if isinstance(last_value, dict) else None
+                indicator_value_difference = last_value.get("differance") if isinstance(last_value, dict) else None
+                
+                # Handle empty strings for integer fields
+                property_id = item.get("property_id")
+                if property_id == "" or property_id is None:
+                    property_id = None
+                else:
+                    try:
+                        property_id = int(property_id)
+                    except (ValueError, TypeError):
+                        property_id = None
+                
+                processed.append({
+                    "indicator_id": item.get("id"),
+                    "indicator_name": item.get("indicator_name"),
+                    "indicator_value": indicator_value,
+                    "indicator_value_date": indicator_value_date,
+                    "indicator_value_difference": indicator_value_difference,
+                    "level_id": item.get("level_id"),
+                    "level_name": item.get("level_name"),
+                    "location_id": item.get("location_id"),
+                    "location_name": item.get("location_name"),
+                    "property_id": property_id,
+                    "property_name": item.get("property_name"),
+                    "property_nature": item.get("property_nature"),
+                    "property_subtype": item.get("property_subtype"),
+                    "property_type": item.get("property_type"),
+                    "parent_info": DataProcessor.jsonify_data(item.get("parent_info")),
+                    "internal_status_id": item.get("internal_status_id"),
+                    "timepoints": DataProcessor.jsonify_data(item.get("timepoints")),
+                    "currency": currency,
+                    "measurement": measurement,
+                    "page_number": page_number,
+                    "raw_data": json.dumps(item),
+                })
+            except Exception as e:
+                logger.warning("Failed to process indicator location ID record: %s", e)
+                logger.debug("Problematic item: %s", item)
+                
+        return processed
 
     @staticmethod
     def process_transactions_avg_data(
