@@ -20,6 +20,7 @@ class Config:
     PROPERTY_LOCATION_ENDPOINT = 'property/location/{location_id}'
     PROPERTY_DETAILS_ENDPOINT = 'property/{property_id}'
     INDICATORS_ALIASES_ENDPOINT = '{country_code}/indicators/aliased/'
+    INDICATOR_LOCATION_ID_ENDPOINT = '{country_code}/indicators/location_id/'
     
     # Transaction API Endpoints
     CMA_SALES_ENDPOINT = '{country_code}/transactions/cma2-sales/'
