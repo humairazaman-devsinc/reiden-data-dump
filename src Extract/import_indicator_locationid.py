@@ -308,10 +308,6 @@ class IndicatorLocationIDImporter:
         
         logger.info(f"🔄 Resume mode: Skipped {len(locations) - len(remaining_locations)} already processed tasks, {len(remaining_locations)} remaining")
         
-        # Create the database table if it doesn't exist
-        logger.info("🔧 Creating indicator_location table if it doesn't exist...")
-        self.db.create_indicator_location_table()
-        
         # Start flusher threads
         self.start_flusher_threads()
         
