@@ -985,60 +985,6 @@ class DatabaseManager:
             logger.error(f"Failed to insert transaction list data: {e}")
             raise
 
-    # def create_transaction_list_table(self) -> None:
-    #     """Create the transaction_list table if it doesn't exist"""
-    #     create_table_query = """
-    #     CREATE TABLE IF NOT EXISTS transaction_list (
-    #         id SERIAL PRIMARY KEY,
-    #         transaction_id VARCHAR(255) NOT NULL,
-    #         date_transaction VARCHAR(50),
-    #         price DECIMAL(18,2),
-    #         price_per_size DECIMAL(18,2),
-    #         size DECIMAL(18,2),
-    #         size_land DECIMAL(18,2),
-    #         location_id INTEGER NOT NULL,
-    #         loc_city_id INTEGER,
-    #         loc_city_name VARCHAR(255),
-    #         loc_county_id INTEGER,
-    #         loc_county_name VARCHAR(255),
-    #         loc_district_id INTEGER,
-    #         loc_district_name VARCHAR(255),
-    #         loc_location_id INTEGER,
-    #         loc_location_name VARCHAR(255),
-    #         loc_municipal_area VARCHAR(255),
-    #         property_id INTEGER,
-    #         property_name VARCHAR(255),
-    #         property_type_name VARCHAR(255),
-    #         property_subtype_name VARCHAR(255),
-    #         municipal_property_type VARCHAR(255),
-    #         attr_unit VARCHAR(50),
-    #         attr_floor VARCHAR(50),
-    #         attr_parking VARCHAR(50),
-    #         attr_land_number VARCHAR(50),
-    #         attr_no_of_rooms INTEGER,
-    #         attr_balcony_area DECIMAL(18,2),
-    #         attr_building_name VARCHAR(255),
-    #         attr_building_number VARCHAR(50),
-    #         query_property_type VARCHAR(50) NOT NULL,
-    #         query_activity_type VARCHAR(50) NOT NULL,
-    #         query_currency VARCHAR(10) NOT NULL,
-    #         query_measurement VARCHAR(10) NOT NULL,
-    #         raw_data TEXT,
-    #         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    #         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    #         UNIQUE(location_id, query_property_type, query_activity_type, query_currency, query_measurement, transaction_id)
-    #     );
-    #     """
-        
-    #     try:
-    #         with self.get_connection() as conn, conn.cursor() as cur:
-    #             cur.execute(create_table_query)
-    #             conn.commit()
-    #             logger.info("Transaction list table created successfully")
-    #     except Exception as e:
-    #         logger.error(f"Failed to create transaction list table: {e}")
-    #         raise
-
     def get_transaction_raw_rent_count(self) -> int:
         """Get the total count of records in transaction_raw_rent table"""
         try:
@@ -1413,3 +1359,107 @@ class DatabaseManager:
             return "VARCHAR(1000)"
         else:
             return "TEXT"
+
+
+    def insert_indicator_location_id_data(self, data_list: List[Dict[str, Any]]) -> None:
+        """Insert indicator location ID data into the database with proper schema matching API response structure"""
+        if not data_list:
+            logger.info("No indicator location ID data to insert")
+            return
+        
+        try:
+            import time
+            logger.info(f"Starting batch insert of {len(data_list)} indicator location ID records...")
+            start_time = time.time()
+            
+            insert_query = """
+                INSERT INTO indicator_location (
+                    location_id, currency, measurement, page_number,
+                    indicator_id, indicator_name, indicator_value, indicator_value_date, indicator_value_difference,
+                    level_id, level_name, location_name, property_id, property_name,
+                    property_nature, property_subtype, property_type, internal_status_id,
+                    parent_info, timepoints, raw_data
+                ) VALUES %s
+                ON CONFLICT (location_id, currency, measurement, page_number, indicator_id)
+                DO UPDATE SET
+                    indicator_name = EXCLUDED.indicator_name,
+                    indicator_value = EXCLUDED.indicator_value,
+                    indicator_value_date = EXCLUDED.indicator_value_date,
+                    indicator_value_difference = EXCLUDED.indicator_value_difference,
+                    level_id = EXCLUDED.level_id,
+                    level_name = EXCLUDED.level_name,
+                    location_name = EXCLUDED.location_name,
+                    property_id = EXCLUDED.property_id,
+                    property_name = EXCLUDED.property_name,
+                    property_nature = EXCLUDED.property_nature,
+                    property_subtype = EXCLUDED.property_subtype,
+                    property_type = EXCLUDED.property_type,
+                    internal_status_id = EXCLUDED.internal_status_id,
+                    parent_info = EXCLUDED.parent_info,
+                    timepoints = EXCLUDED.timepoints,
+                    raw_data = EXCLUDED.raw_data,
+                    updated_at = CURRENT_TIMESTAMP
+            """
+            
+            # Prepare ordered data for execute_values with proper JSON handling
+            from psycopg2.extras import Json
+            ordered_data = []
+            for record in data_list:
+                # Extract last_value information
+                last_value = record.get('last_value', {})
+                indicator_value = last_value.get('value') if isinstance(last_value, dict) else None
+                indicator_value_date = last_value.get('date') if isinstance(last_value, dict) else None
+                indicator_value_difference = last_value.get('differance') if isinstance(last_value, dict) else None
+                
+                # Helper function to convert empty strings to None for integer fields
+                def safe_int(value):
+                    if value == '' or value is None:
+                        return None
+                    try:
+                        return int(value)
+                    except (ValueError, TypeError):
+                        return None
+                
+                ordered_record = [
+                    safe_int(record.get('location_id')),
+                    record.get('currency'),
+                    record.get('measurement'),
+                    safe_int(record.get('page_number')),
+                    safe_int(record.get('indicator_id')),
+                    record.get('indicator_name'),
+                    indicator_value,
+                    indicator_value_date,
+                    indicator_value_difference,
+                    safe_int(record.get('level_id')),
+                    record.get('level_name'),
+                    record.get('location_name'),
+                    safe_int(record.get('property_id')),
+                    record.get('property_name'),
+                    record.get('property_nature'),
+                    record.get('property_subtype'),
+                    record.get('property_type'),
+                    safe_int(record.get('internal_status_id')),
+                    Json(record.get('parent_info')) if record.get('parent_info') else None,
+                    Json(record.get('timepoints')) if record.get('timepoints') else None,
+                    Json(record.get('raw_data')) if record.get('raw_data') else None
+                ]
+                ordered_data.append(ordered_record)
+            
+            # Use execute_values for insertion
+            conn = None
+            try:
+                conn = self.get_connection()
+                with conn.cursor() as cur:
+                    from psycopg2.extras import execute_values, Json
+                    execute_values(cur, insert_query, ordered_data, page_size=1000)
+                    conn.commit()
+            finally:
+                if conn:
+                    conn.close()
+            
+            end_time = time.time()
+            duration = end_time - start_time
+            logger.info(f"✅ Successfully inserted {len(data_list)} indicator location ID records in {duration:.2f} seconds")
+        except Exception as e:
+            logger.error(f"Failed to insert indicator location ID data: {e}")
+            raise
