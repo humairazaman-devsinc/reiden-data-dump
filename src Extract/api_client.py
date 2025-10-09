@@ -35,6 +35,9 @@ class ReidinAPIClient:
                 logger.info("API response: %s", response)
                 data = response.json()
                 return data
+            except KeyboardInterrupt:
+                logger.warning("Request interrupted by user")
+                raise
             except Exception as e:
                 # Check if it's a 429 (rate limit) error
                 if "response" in locals() and hasattr(response, "status_code"):
@@ -58,6 +61,34 @@ class ReidinAPIClient:
                             raise
                     elif response.status_code == 400:
                         logger.warning("Data not found: %s", e)
+                        raise
+                    elif response.status_code >= 500:
+                        # Server error - retry with backoff
+                        if attempt < max_retries:
+                            wait_time = retry_delay * (2**attempt)
+                            logger.warning(
+                                "Server error (%d), retrying in %.1f seconds (attempt %d/%d)",
+                                response.status_code, wait_time, attempt + 1, max_retries
+                            )
+                            time.sleep(wait_time)
+                            continue
+                        else:
+                            logger.error("Max retries reached for server error (%d): %s", response.status_code, e)
+                            raise
+
+                # Handle timeout and connection errors
+                error_str = str(e).lower()
+                if any(keyword in error_str for keyword in ['timeout', 'connection', 'network', 'ssl']):
+                    if attempt < max_retries:
+                        wait_time = retry_delay * (2**attempt)
+                        logger.warning(
+                            "Network/timeout error, retrying in %.1f seconds (attempt %d/%d): %s",
+                            wait_time, attempt + 1, max_retries, e
+                        )
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        logger.error("Max retries reached for network error: %s", e)
                         raise
 
                 logger.error("API request failed: %s", e)
@@ -319,6 +350,42 @@ class ReidinAPIClient:
         return self.get(
             endpoint, params, max_retries=max_retries, retry_delay=retry_delay
         )
+
+    def fetch_indicator_location_id(
+        self,
+        country_code: str,
+        location_id: str | int,
+        currency: str = "aed",
+        measurement: str = "int",
+        page_number: int = 1,  # Revert to 1
+        page_size: int = 500,
+        sort: str = "desc",
+        start_date: str | None = None,
+        end_date: str | None = None,
+        alias: str | None = None
+    ) -> Dict[str, Any]:
+        """Fetch indicator data by location ID with pagination support"""
+        endpoint = f"{country_code}/indicators/location_id/"
+        
+        params = {
+            "location_id": location_id,
+            "currency": currency,
+            "measurement": measurement,
+            "page_number": page_number,
+            "page_size": page_size,
+            "sort": sort
+        }
+        
+        # Add optional parameters if provided
+        if start_date:
+            params["start_date"] = start_date
+        if end_date:
+            params["end_date"] = end_date
+        if alias:
+            params["alias"] = alias
+            
+        logger.info("Fetching indicator location ID data from %s with params %s", endpoint, params)
+        return self.get(endpoint, params)
 
     def fetch_cma_data(
         self, params: Dict[str, Any], max_retries: int = 3, retry_delay: float = 2.0
